@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>YouChat</title>
+<link rel="stylesheet" href="sample.css">
+<script type="text/javascript" src="nicoscreen.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1 class="logo">ChartChaT</h1>
+    </div>
+
+    <!-- コンテンツ表示画面 -->
+    <div class="container">
+        <div class="postarea cf">
+                <!-- <input type="text" id="username" class="username" placeholder="user名"> -->
+            <div class="postarea-text">
+                <input type="text" id="text" cols="30" rows="10"></input>
+            </div>
+        </div>
+    </div>
+
+    <div id="output"></div>
+
+    <div id="nicoscreen" class="nicoscreen">
+         <!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+        <div id="tradingview_3838e"></div>
+        <div class="tradingview-widget-copyright"><!--TradingView提供による-->
+        <a href="https://jp.tradingview.com/symbols/OANDA-USDJPY/" rel="noopener" target="_blank">
+        <span class="blue-text">USDJPY チャート</span></a></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+        <script type="text/javascript">
+        new TradingView.widget(
+        {
+        "width": 1200,
+        "height": 710,
+        "symbol": "OANDA:USDJPY",
+        "interval": "60",
+        "timezone": "Etc/UTC",
+        "theme": "Light",
+        "style": "1",
+        "locale": "ja",
+        "toolbar_bg": "#f1f3f6",
+        "enable_publishing": true,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_3838e"
+      }
+        );
+        </script>
+      </div>
+      <!-- TradingView Widget END -->
+    </div>
+            
+    
+
+
+
+<!-- 以下JavaScript領域 -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- 以下Firebase -->
+<script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyCAlDkMkNfIyGeRsv_rRCWuAMmD2ZvznqQ",
+    authDomain: "my-project-1524297777391.firebaseapp.com",
+    databaseURL: "https://my-project-1524297777391.firebaseio.com",
+    projectId: "my-project-1524297777391",
+    storageBucket: "my-project-1524297777391.appspot.com",
+    messagingSenderId: "1038541352770"
+  };
+
+  firebase.initializeApp(config);
+    
+  //MSG送受信準備
+  let newPostRef = firebase.database().ref();
+
+   $("#text").on("click keydown",function(e){
+       if(typeof e.keyCode === "undefined" || e.keyCode === 13){
+           newPostRef.push({
+               text: $("#text").val()
+           })
+       };
+
+      $("#text").val("");//送信した後にtext内容を削除
+  });
+
+  
+
+
+  //受信処理
+  newPostRef.on("child_added",function(data){
+
+      //一度変数に入れないといけない
+      const v = data.val();
+
+      //データのユニークキー 取得方法
+      const k = data.key;
+      const str = '<dl><dt>'+v.username+'</dt><dd>'+v.text+'</dd></dl>'
+
+    obj.comments.push(v.text);
+      console.log(obj);
+  });
+
+
+// .html(): 引数をHTMLとして書き換え。タグが有効になる。
+// .text(): 引数を文字列として書き換え。タグはエスケープされて無効になる。
+// .val(): 引数をvalueとして書き換え。
+
+
+//①流れる文字を配列内に定義して、
+var obj = {
+        //基本情報が設定できる
+        "base":{
+            color:"white", //文字の色を指定
+            speed:"normal", //文字が流れるスピードを指定。slow/fast/normal
+            interval:"normal",//文字が流れる間隔を指定。slow/fast/normal
+            font_size:"30px", //フォントのサイズを指定。
+            loop:false //文字が最後まで流れた後に、繰り返すかどうか true/false
+},  
+        //ここに、重ねるコメントを登録。
+        "comments":[
+            "コメント１",
+            "コメント２",
+            "コメント３",   
+            "コメント４",
+            "コメント５",
+            "コメント６"
+        ]
+};
+
+
+
+//②ここで①で定義した配列をもとに文字を排出しまくる
+    nicoscreen.set(obj);
+    nicoscreen.start();
+</script>
+</body>
+</html>

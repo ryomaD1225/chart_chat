@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Page Title</title>
+    <link rel="stylesheet" href="rain.css">
+</head>
+<body>
+    <input type="text" id="word" size="40">
+    <canvas id ="c"></canvas>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase.js"></script>
+    <script>           
+
+//======================= firebase ============================
+// Initialize Firebase
+var config = {
+    apiKey: "AIzaSyCAlDkMkNfIyGeRsv_rRCWuAMmD2ZvznqQ",
+    authDomain: "my-project-1524297777391.firebaseapp.com",
+    databaseURL: "https://my-project-1524297777391.firebaseio.com",
+    projectId: "my-project-1524297777391",
+    storageBucket: "my-project-1524297777391.appspot.com",
+    messagingSenderId: "1038541352770"
+  };
+
+  firebase.initializeApp(config);
+
+    //MSG送受信準備
+  let newPostRef = firebase.database().ref();
+
+
+    
+  //======================= matrix ===============================
+
+        //var を使わずに定義した変数はグローバル変数として査定される。
+        var s = window.screen;
+        var c = document.getElementById("c");   //getElementByIdメソッドでHTMLと関連づけて、
+        var ctx = c.getContext("2d");           //getContextメソッドで描画機能を有効にする。
+
+        var width = c.width = s.width;
+        
+        var height = c.height = s.height;
+
+
+        var matrix = "GsACADEMY";
+
+        // これ以降、matrixは配列
+        matrix = matrix.split("");  // " "で区切って分割してそれぞれを変数 matrix へ入れ直している。
+
+        var font_size = 20;
+
+        var columns = c.width / font_size;
+
+        // 1行を表す
+        var drops = [];//空の配列を作成
+        
+        // dropsの初期化
+        for (var x = 0; x < columns; x++){
+          drops[x] = 1;
+        }
+        
+        // 
+        function draw()
+        {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.04)";  //図形を塗りつブス色を指定。あくまで指定。
+            ctx.fillRect(0, 0, c.width, c.height);  //canvas上の指定の矩形を現在の塗りつぶしスタイルを使って塗りつぶし実行。
+            ctx.fillStyle = "#0F0";                 //図形を塗りつぶす色を指定。あくまでね。
+            ctx.font = font_size + "px arial";
+
+            // 1行書くための処理
+            for( var i = 0; i < drops.length; i++)
+            {   
+              // 1文字を書くための処理
+
+              //Math.floor は 変数 x の切り捨てた値を返し( Math.random() * matrix.length) *小数点切り上げ
+              var text = matrix[Math.floor( Math.random() * matrix.length)];
+              // console.log(text);
+              //テキストを描く。(i * font_size [x]  , drops[i] * font_size[y]) で指定した位置にテキストを塗りつぶして描画。
+              ctx.fillText(text, i * font_size, drops[i] * font_size);
+
+              if( drops[i] * font_size > c.height && Math.random() > 0.975)
+              
+              //setInterval 毎に座標を一つづつ更新していき下まで達した段階でランダムに座標をゼロに戻す。
+              drops[i] = 0;
+              drops[i]++; // 1行ずれてdrawされる
+            }
+        }
+
+        // これで引き数は渡せる
+        setInterval( draw, 50);
+
+//==================== translation ==========================
+"use strict"
+
+
+$(function() {
+
+var inteGration;
+// 文字が入力されたらイベント発火
+
+  $("#word").change(function() {
+  
+
+// 認証トークンを取得するための関数 [getToken] を定義
+// http://docs.microsofttranslator.com/oauth-token.html
+
+    const getToken = function() {
+      const defer = $.Deferred();
+      $.ajax({
+        url: 'https://api.cognitive.microsoft.com/sts/v1.0/issueToken',
+        type: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/jwt',
+          'Ocp-Apim-Subscription-Key': 'aa379f5cd0c0484dafb32bad6d32b638',
+        },
+      }).done(function(data) {
+
+          const token = data;
+          defer.resolve(token);
+
+      });
+          return defer.promise();
+    };
+
+// 関数 [getToken] 実行後、取得したトークンを 引き渡す
+// フォームから入力したデータとともに、 Microsoft Translator テキストAPIへ送信
+
+    $.when(getToken()).done(function(token) {
+      const key = 'Bearer ' + token;
+      const text = $("#word").val();
+      const response = $.ajax({
+        url: 'https://api.microsofttranslator.com/v2/http.svc/Translate',
+        type: 'GET',
+        data: {
+          'appid': key,
+          'Accept': 'application/xml',
+          'text': text,
+          'to': 'en',
+        },
+      async: false,
+      })
+
+// Translator テキスト APIを通じて取得したデータから、翻訳語が含まれるプロパティを取得
+// replace関数でタグを除去し、翻訳データのみを抽出して表示する
+
+      const data = response.responseText;
+
+      var translation = data.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+      
+      newPostRef.push({
+          before: $("#word").val(),
+          after: translation
+      });
+
+      //firebaseから受信処理
+      newPostRef.on("child_added",function(data){
+          var allData = data.val();
+          inteGration = allData.before + allData.after;
+          console.log(inteGration);
+      });
+
+      // $("#english").text(translation);
+      //変数inteGrationの値を変数matrixへインクリメントする。
+        matrix += inteGration;
+        console.log({matrix}, {inteGration});
+
+        $("#word").val("");//送信した後にtext内容を削除
+        
+    })
+  })
+
+//=================== 入力項目のフェードイン =====================================
+  $('input').hide();
+
+$(window).on('load', function() {
+$('input').fadeIn(10000);
+});
+})
+    </script>
+    
+    <script src="translation.js"></script>
+</body>
+</html>
